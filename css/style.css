@@ -348,3 +348,11 @@ body {
 }
 .badge.perfect { background: rgba(63, 193, 201, 0.18); color: var(--turquoise); }
 .scan-empty { color: var(--muted); }
+
+/* ---------- Visuals ---------- */
+.viz {
+  display: block;
+  width: 100%;
+  height: clamp(260px, 38vw, 380px);
+  margin: 0 auto 0.5rem;
+}

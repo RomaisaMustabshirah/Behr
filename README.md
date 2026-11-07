@@ -27,5 +27,5 @@ Or use the VS Code **Live Server** extension.
 - [x] Meters as data, drawn as right-to-left rhythm with an animated playhead
 - [x] Rhythm to sound (Web Audio)
 - [x] Scansion engine: verse in, meter out
-- [ ] Generative visuals driven by the rhythm
+- [x] Generative visuals driven by the rhythm
 - [ ] Polish and write-up

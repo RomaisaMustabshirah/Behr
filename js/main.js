@@ -1,10 +1,12 @@
 // main.js
 // Renders the meter list, draws the selected meter as rhythm blocks,
-// and plays it as tabla strokes, with the visuals synced to the audio clock.
+// plays it as tabla strokes, and drives the generative visuals,
+// all synced to the audio clock.
 
 import { METERS } from './meters.js';
 import { getContext, resumeAudio, playSyllable } from './audio.js';
 import { initScanner } from './scanner-ui.js';
+import { createVisualizer } from './visuals.js';
 
 // ---------- DOM references ----------
 const els = {
@@ -25,6 +27,8 @@ const els = {
   examplePoet: document.getElementById('example-poet'),
 };
 
+const viz = createVisualizer(document.getElementById('viz'));
+
 // ---------- Scheduler settings ----------
 // Every 25 ms we look 0.1 s into the future and book any syllables that fall
 // inside that window on the audio clock (the "lookahead scheduler" pattern).
@@ -34,13 +38,14 @@ const SCHEDULE_AHEAD_S = 0.1;
 // ---------- State ----------
 const state = {
   meter: null,
-  schedule: [],     // [{ el, weight, accent }] one entry per syllable
+  schedule: [],     // [{ el, weight, accent, startUnit }] one entry per syllable
+  totalUnits: 0,    // length of the whole misra in units
   playing: false,
   nextIndex: 0,     // which syllable gets booked next
   nextTime: 0,      // when it should sound, in audio-clock seconds
   finished: false,  // true once the last syllable is booked (loop off)
   endTime: 0,       // when that last syllable ends
-  visualQueue: [],  // [{ el, start, end }] booked syllables waiting to glow
+  visualQueue: [],  // [{ index, el, start, end, fired }] booked syllables waiting to glow
   timerId: null,
   rafId: null,
 };
@@ -93,6 +98,7 @@ function selectMeter(id) {
 function renderRhythm(meter) {
   els.rhythm.innerHTML = '';
   state.schedule = [];
+  let cursor = 0;
 
   meter.arkan.forEach((rukn) => {
     const group = document.createElement('div');
@@ -111,7 +117,8 @@ function renderRhythm(meter) {
       `;
       beats.appendChild(beat);
 
-      state.schedule.push({ el: beat, weight, accent: i === 0 });
+      state.schedule.push({ el: beat, weight, accent: i === 0, startUnit: cursor });
+      cursor += weight;
     });
 
     const label = document.createElement('div');
@@ -124,6 +131,13 @@ function renderRhythm(meter) {
     group.append(beats, label);
     els.rhythm.appendChild(group);
   });
+
+  state.totalUnits = cursor;
+  viz.setMeter(state.schedule.map((s) => ({
+    frac: s.startUnit / state.totalUnits,
+    weight: s.weight,
+    accent: s.accent,
+  })));
 }
 
 function renderExample(meter) {
@@ -166,6 +180,7 @@ function stop() {
   state.rafId = null;
   state.visualQueue = [];
   state.schedule.forEach((s) => s.el.classList.remove('active'));
+  viz.setPlayhead(null);
   els.play.textContent = '▶ Play';
   els.play.setAttribute('aria-pressed', 'false');
 }
@@ -187,7 +202,13 @@ function scheduler() {
     const duration = item.weight * unitSec();
 
     if (els.sound.checked) playSyllable(item.weight, state.nextTime, item.accent);
-    state.visualQueue.push({ el: item.el, start: state.nextTime, end: state.nextTime + duration });
+    state.visualQueue.push({
+      index: state.nextIndex,
+      el: item.el,
+      start: state.nextTime,
+      end: state.nextTime + duration,
+      fired: false,
+    });
 
     state.nextTime += duration;
     state.nextIndex += 1;
@@ -214,9 +235,20 @@ function draw() {
     state.visualQueue.shift().el.classList.remove('active');
   }
 
-  // Light the current one (if it has started yet).
+  // Light the current one (if it has started yet), and fire its visual once.
   const current = state.visualQueue[0];
-  if (current && current.start <= now) current.el.classList.add('active');
+  if (current && current.start <= now) {
+    current.el.classList.add('active');
+    if (!current.fired) {
+      current.fired = true;
+      viz.pulse(current.index);
+    }
+
+    // Smooth playhead: how far through this syllable are we, in units?
+    const item = state.schedule[current.index];
+    const progress = (now - current.start) / (current.end - current.start);
+    viz.setPlayhead((item.startUnit + progress * item.weight) / state.totalUnits);
+  }
 
   if (state.finished && now >= state.endTime) {
     stop();
