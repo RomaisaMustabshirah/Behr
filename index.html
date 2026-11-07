@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Behr — the hidden rhythm of Urdu poetry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Behr <span class="urdu" lang="ur" dir="rtl">بحر</span></h1>
+    <p class="tagline">The hidden rhythm inside Urdu poetry.</p>
+  </header>
+
+  <main class="layout">
+    <!-- Left: list of meters (filled in by main.js) -->
+    <nav class="meter-list" id="meter-list" aria-label="Meters"></nav>
+
+    <!-- Right: the selected meter, drawn as rhythm -->
+    <section class="stage" id="stage">
+      <p class="empty-hint" id="empty-hint">Choose a behr to see its rhythm.</p>
+
+      <div class="meter-view" id="meter-view" hidden>
+        <div class="meter-head">
+          <h2 id="meter-name"></h2>
+          <p id="meter-urdu" class="urdu meter-urdu" lang="ur" dir="rtl"></p>
+        </div>
+
+        <!-- dir="rtl": Urdu reads right to left, so the rhythm does too -->
+        <div class="rhythm" id="rhythm" dir="rtl"></div>
+
+        <div class="controls">
+          <button type="button" id="play-btn" class="play-btn" aria-pressed="false">▶ Play</button>
+
+          <label class="tempo">
+            Tempo
+            <input type="range" id="tempo" min="80" max="260" step="1" value="160">
+            <output id="tempo-value">160</output>
+          </label>
+
+          <label class="loop">
+            <input type="checkbox" id="loop" checked>
+            Loop
+          </label>
+        </div>
+
+        <figure class="example" id="example" hidden>
+          <blockquote>
+            <p class="urdu example-urdu" id="example-urdu" lang="ur" dir="rtl"></p>
+            <p class="example-roman" id="example-roman"></p>
+          </blockquote>
+          <figcaption id="example-poet"></figcaption>
+        </figure>
+
+        <p class="legend">
+          <span class="legend-item"><span class="legend-beat short">◡</span> short syllable (hijā-e-kotāh) = 1</span>
+          <span class="legend-item"><span class="legend-beat long">—</span> long syllable (hijā-e-buland) = 2</span>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
