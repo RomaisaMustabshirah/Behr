@@ -1,15 +1,31 @@
 /* style.css — Behr
-   Palette nods to Multani blue tilework: deep indigo, lapis, turquoise, ivory. */
+   Theme: Shab-e-mehfil, a candlelit mushaira night (plum, wine, candle-amber, old paper). */
 
 :root {
-  --bg: #0e1230;
-  --panel: #161b45;
-  --panel-2: #1d2358;
-  --ink: #f3ecdc;
-  --muted: #a9a7c4;
-  --lapis: #2f4bb8;
-  --turquoise: #3fc1c9;
-  --gold: #e0b25a;
+  /* ===== Theme: Shab-e-mehfil (a candlelit mushaira night) =====
+     To change the whole look, edit only this block. */
+  --bg: #170f1a;           /* night sky, deep plum */
+  --bg-glow: #2c1a2a;      /* candle glow in the corner */
+  --panel: #22172a;
+  --panel-2: #2e1f36;
+  --ink: #f4e8d6;          /* old paper */
+  --muted: #b9a8a8;
+  --long: #8e3b52;         /* long syllables: wine */
+  --short: #3d2638;        /* short syllables: dusk */
+  --accent: #e9a979;       /* candlelight: what is sounding now */
+  --gold: #d9b26f;
+  --danger: #e06a6a;
+  --danger-ink: #ff9c9c;
+
+  /* The same colors as R, G, B numbers, for see-through glows: rgba(var(--x-rgb), 0.5) */
+  --accent-rgb: 233, 169, 121;
+  --gold-rgb: 217, 178, 111;
+  --long-rgb: 142, 59, 82;
+  --danger-rgb: 224, 106, 106;
+
+  /* Older names that visuals.js still reads */
+  --lapis: var(--long);
+  --turquoise: var(--accent);
 
   --unit: clamp(12px, 1.6vw, 24px); /* width of one short syllable */
   --beat-h: 64px;
@@ -21,7 +37,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 0%, #1b2160 0%, var(--bg) 55%);
+  background: radial-gradient(circle at 20% 0%, var(--bg-glow) 0%, var(--bg) 55%);
   color: var(--ink);
   font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.5;
@@ -44,7 +60,7 @@ body {
   letter-spacing: 0.02em;
 }
 .site-header h1 .urdu {
-  color: var(--turquoise);
+  color: var(--accent);
   font-size: 2rem;
   margin-inline-start: 0.4rem;
 }
@@ -90,9 +106,9 @@ body {
   transition: background 0.2s, border-color 0.2s;
 }
 .meter-btn:hover { background: var(--panel-2); }
-.meter-btn:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 2px; }
+.meter-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .meter-btn.active {
-  border-color: var(--turquoise);
+  border-color: var(--accent);
   background: var(--panel-2);
 }
 .meter-btn-urdu {
@@ -150,17 +166,17 @@ body {
   justify-content: center;
   transition: transform 0.08s ease-out, background 0.08s, box-shadow 0.08s;
 }
-.beat.short { background: #27306e; }
-.beat.long  { background: var(--lapis); }
+.beat.short { background: var(--short); }
+.beat.long  { background: var(--long); }
 
 .beat-mark  { font-size: 1.1rem; line-height: 1; }
 .beat-digit { font-size: 0.7rem; color: var(--muted); }
 
 .beat.active {
-  background: var(--turquoise);
+  background: var(--accent);
   color: var(--bg);
   transform: scaleY(1.18);
-  box-shadow: 0 0 18px rgba(63, 193, 201, 0.6);
+  box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.6);
 }
 .beat.active .beat-digit { color: var(--bg); }
 
@@ -200,9 +216,9 @@ body {
   color: var(--muted);
   font-size: 0.9rem;
 }
-.tempo input { accent-color: var(--turquoise); }
+.tempo input { accent-color: var(--accent); }
 .tempo output { min-width: 2.5ch; color: var(--ink); }
-.toggle input { accent-color: var(--turquoise); }
+.toggle input { accent-color: var(--accent); }
 
 /* ---------- Example verse ---------- */
 .example {
@@ -234,8 +250,8 @@ body {
   border-radius: 5px;
   color: var(--ink);
 }
-.legend-beat.short { width: 18px; background: #27306e; }
-.legend-beat.long  { width: 40px; background: var(--lapis); }
+.legend-beat.short { width: 18px; background: var(--short); }
+.legend-beat.long  { width: 40px; background: var(--long); }
 
 /* ---------- Scanner ---------- */
 .scanner {
@@ -254,7 +270,7 @@ body {
 .scanner-help { color: var(--muted); font-size: 0.9rem; margin: 0 0 1rem; }
 .scanner-help code {
   background: var(--panel-2);
-  color: var(--turquoise);
+  color: var(--accent);
   padding: 0.05rem 0.35rem;
   border-radius: 4px;
 }
@@ -269,7 +285,7 @@ body {
   font-size: 1.05rem;
   resize: vertical;
 }
-#scan-input:focus { outline: 2px solid var(--turquoise); outline-offset: 1px; }
+#scan-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .scanner-actions {
   display: flex;
@@ -282,15 +298,15 @@ body {
 
 .ghost-btn {
   padding: 0.5rem 1.1rem;
-  border: 1px solid var(--turquoise);
+  border: 1px solid var(--accent);
   border-radius: 999px;
   background: transparent;
-  color: var(--turquoise);
+  color: var(--accent);
   font: inherit;
   font-size: 0.9rem;
   cursor: pointer;
 }
-.ghost-btn:hover { background: rgba(63, 193, 201, 0.12); }
+.ghost-btn:hover { background: rgba(var(--accent-rgb), 0.12); }
 .ghost-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* Syllable chips */
@@ -312,10 +328,10 @@ body {
   background: var(--panel-2);
 }
 .syl-text { font-size: 0.95rem; }
-.syl-mark { color: var(--turquoise); font-size: 1rem; line-height: 1.2; }
+.syl-mark { color: var(--accent); font-size: 1rem; line-height: 1.2; }
 .syl.flex { border-style: dashed; border-color: var(--muted); }
-.syl.mismatch { background: rgba(224, 90, 90, 0.18); border: 1px solid #e05a5a; }
-.syl.mismatch .syl-mark { color: #ff8a8a; }
+.syl.mismatch { background: rgba(var(--danger-rgb), 0.18); border: 1px solid var(--danger); }
+.syl.mismatch .syl-mark { color: var(--danger-ink); }
 .syl.skipped { opacity: 0.45; }
 
 /* Results */
@@ -343,10 +359,10 @@ body {
   font-size: 0.75rem;
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
-  background: rgba(224, 178, 90, 0.18);
+  background: rgba(var(--gold-rgb), 0.18);
   color: var(--gold);
 }
-.badge.perfect { background: rgba(63, 193, 201, 0.18); color: var(--turquoise); }
+.badge.perfect { background: rgba(var(--accent-rgb), 0.18); color: var(--accent); }
 .scan-empty { color: var(--muted); }
 
 /* ---------- Visuals ---------- */
@@ -369,15 +385,15 @@ body {
   padding: 0.35rem 0.8rem;
   font-style: italic;
 }
-.badge.variant { background: rgba(47, 75, 184, 0.35); color: var(--ink); }
+.badge.variant { background: rgba(var(--long-rgb), 0.45); color: var(--ink); }
 
 /* ---------- Verse playback: the sounding syllable glows ---------- */
 .syl { transition: background 0.08s, transform 0.08s, box-shadow 0.08s; }
 .syl.playing {
-  background: var(--turquoise);
-  border-color: var(--turquoise);
+  background: var(--accent);
+  border-color: var(--accent);
   transform: translateY(-3px);
-  box-shadow: 0 0 14px rgba(63, 193, 201, 0.6);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.6);
 }
 .syl.playing .syl-text,
 .syl.playing .syl-mark { color: var(--bg); }
@@ -397,7 +413,7 @@ body {
 .about h2 { margin: 0 0 0.75rem; font-weight: 500; }
 .about h2 .urdu { color: var(--gold); font-size: 1.2rem; margin-inline-start: 0.4rem; }
 .about-lead { max-width: 72ch; color: var(--ink); margin: 0 0 1.5rem; }
-.about em { color: var(--turquoise); font-style: italic; }
+.about em { color: var(--accent); font-style: italic; }
 
 .about-grid {
   display: grid;
@@ -427,4 +443,4 @@ body {
   font-size: 0.85rem;
   padding: 0 1rem 2.5rem;
 }
-.site-footer a { color: var(--turquoise); }
+.site-footer a { color: var(--accent); }
