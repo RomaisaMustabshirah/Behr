@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Behr — the hidden rhythm of Urdu poetry</title>
+  <meta name="description" content="Behr scans Urdu poetry, finds its meter, plays it as tabla rhythm and draws it as Islamic geometry.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%233fc1c9'%3E%3Crect x='22' y='22' width='56' height='56'/%3E%3Crect x='22' y='22' width='56' height='56' transform='rotate(45 50 50)'/%3E%3C/g%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
@@ -90,6 +92,50 @@
       <ol class="scan-results" id="scan-results"></ol>
     </div>
   </section>
+
+  <section class="about" aria-labelledby="about-title">
+    <h2 id="about-title">About Behr <span class="urdu" lang="ur" dir="rtl">تعارف</span></h2>
+    <p class="about-lead">
+      Every Urdu ghazal is built on a <em>behr</em>: a meter made of feet (<em>arkān</em>) such as
+      <em>mafā‘īlun</em> and <em>fā‘ilātun</em>, each a fixed pattern of long and short syllables.
+      Poets and listeners feel this structure, but it is rarely seen. Behr makes it visible, audible and computable.
+    </p>
+
+    <div class="about-grid">
+      <article>
+        <h3>See</h3>
+        <p>
+          Each meter is drawn as right-to-left rhythm and as geometry. Every syllable takes its place on a circle,
+          so each behr draws its own signature in the 8-pointed <em>khatam</em> star of Islamic tilework.
+        </p>
+      </article>
+      <article>
+        <h3>Hear</h3>
+        <p>
+          A synthesized tabla plays long syllables as a deep <em>dum</em> and short ones as a bright <em>tak</em>,
+          scheduled on the audio clock so sound, light and geometry stay in step.
+        </p>
+      </article>
+      <article>
+        <h3>Scan</h3>
+        <p>
+          A scansion engine (<em>taqtī‘</em>) splits a Roman Urdu misra into syllables, weighs them by the rules of
+          <em>‘arūz</em>, including poetic licence, <em>wasl</em> and <em>zihāf</em>, and finds the meter with dynamic programming.
+        </p>
+      </article>
+    </div>
+
+    <h3 class="about-sub">Limits and next steps</h3>
+    <ul class="about-list">
+      <li>Input is Roman Urdu. Urdu script leaves out short vowels, so scanning it directly needs a lexicon or a model to restore them.</li>
+      <li>Nine meters and their common zihāf forms are modelled so far; classical prosody recognises many more.</li>
+      <li>Tested on misras by Mirza Ghalib and Allama Iqbal. All sample verses are in the public domain.</li>
+    </ul>
+  </section>
+
+  <footer class="site-footer">
+    <p>Made by Romaisa Mustabshirah · <a href="https://github.com/RomaisaMustabshirah/behr">Source on GitHub</a></p>
+  </footer>
 
   <script type="module" src="js/main.js"></script>
 </body>
