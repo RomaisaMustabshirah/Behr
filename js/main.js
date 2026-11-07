@@ -1,8 +1,9 @@
 // main.js
 // Renders the meter list, draws the selected meter as rhythm blocks,
-// and animates a playhead through it. Sound is added in Step 2.
+// and plays it as tabla strokes, with the visuals synced to the audio clock.
 
 import { METERS } from './meters.js';
+import { getContext, resumeAudio, playSyllable } from './audio.js';
 
 // ---------- DOM references ----------
 const els = {
@@ -16,26 +17,35 @@ const els = {
   tempo: document.getElementById('tempo'),
   tempoValue: document.getElementById('tempo-value'),
   loop: document.getElementById('loop'),
+  sound: document.getElementById('sound'),
   example: document.getElementById('example'),
   exampleUrdu: document.getElementById('example-urdu'),
   exampleRoman: document.getElementById('example-roman'),
   examplePoet: document.getElementById('example-poet'),
 };
 
+// ---------- Scheduler settings ----------
+// Every 25 ms we look 0.1 s into the future and book any syllables that fall
+// inside that window on the audio clock (the "lookahead scheduler" pattern).
+const SCHEDULER_INTERVAL_MS = 25;
+const SCHEDULE_AHEAD_S = 0.1;
+
 // ---------- State ----------
-// position is measured in "units": a short syllable lasts 1 unit, a long one 2.
 const state = {
   meter: null,
-  schedule: [],   // [{ el, start, end }] in units
-  totalUnits: 0,
+  schedule: [],     // [{ el, weight, accent }] one entry per syllable
   playing: false,
-  position: 0,
-  lastFrame: 0,
+  nextIndex: 0,     // which syllable gets booked next
+  nextTime: 0,      // when it should sound, in audio-clock seconds
+  finished: false,  // true once the last syllable is booked (loop off)
+  endTime: 0,       // when that last syllable ends
+  visualQueue: [],  // [{ el, start, end }] booked syllables waiting to glow
+  timerId: null,
   rafId: null,
 };
 
-// Tempo slider = short syllables per minute, so 1 unit lasts 60000 / tempo ms.
-const unitMs = () => 60000 / Number(els.tempo.value);
+// Tempo slider = short syllables per minute, so 1 unit lasts 60 / tempo seconds.
+const unitSec = () => 60 / Number(els.tempo.value);
 
 // ---------- Meter list ----------
 function renderMeterList() {
@@ -78,10 +88,10 @@ function selectMeter(id) {
 // ---------- Rhythm drawing ----------
 // Each foot becomes a group; each syllable becomes a block whose width
 // is proportional to its weight (long = twice as wide as short).
+// The first syllable of every foot is marked as an accent.
 function renderRhythm(meter) {
   els.rhythm.innerHTML = '';
   state.schedule = [];
-  let cursor = 0;
 
   meter.arkan.forEach((rukn) => {
     const group = document.createElement('div');
@@ -90,7 +100,7 @@ function renderRhythm(meter) {
     const beats = document.createElement('div');
     beats.className = 'beats';
 
-    rukn.pattern.forEach((weight) => {
+    rukn.pattern.forEach((weight, i) => {
       const beat = document.createElement('div');
       beat.className = `beat ${weight === 2 ? 'long' : 'short'}`;
       beat.style.setProperty('--w', weight);
@@ -100,8 +110,7 @@ function renderRhythm(meter) {
       `;
       beats.appendChild(beat);
 
-      state.schedule.push({ el: beat, start: cursor, end: cursor + weight });
-      cursor += weight;
+      state.schedule.push({ el: beat, weight, accent: i === 0 });
     });
 
     const label = document.createElement('div');
@@ -114,8 +123,6 @@ function renderRhythm(meter) {
     group.append(beats, label);
     els.rhythm.appendChild(group);
   });
-
-  state.totalUnits = cursor;
 }
 
 function renderExample(meter) {
@@ -130,48 +137,92 @@ function renderExample(meter) {
 }
 
 // ---------- Playback ----------
-function play() {
-  if (!state.meter) return;
+async function play() {
+  if (!state.meter || state.playing) return;
   state.playing = true;
-  state.position = 0;
-  state.lastFrame = performance.now();
+
+  const ctx = await resumeAudio();
+  if (!state.playing) return; // user pressed Stop while audio was waking up
+
+  state.nextIndex = 0;
+  state.nextTime = ctx.currentTime + 0.05; // tiny gap so the first stroke isn't late
+  state.finished = false;
+  state.visualQueue = [];
+
   els.play.textContent = '■ Stop';
   els.play.setAttribute('aria-pressed', 'true');
-  state.rafId = requestAnimationFrame(tick);
+
+  scheduler();
+  state.timerId = setInterval(scheduler, SCHEDULER_INTERVAL_MS);
+  state.rafId = requestAnimationFrame(draw);
 }
 
 function stop() {
   state.playing = false;
+  clearInterval(state.timerId);
+  state.timerId = null;
   if (state.rafId !== null) cancelAnimationFrame(state.rafId);
   state.rafId = null;
+  state.visualQueue = [];
   state.schedule.forEach((s) => s.el.classList.remove('active'));
   els.play.textContent = '▶ Play';
   els.play.setAttribute('aria-pressed', 'false');
 }
 
-// We advance the position by the time since the LAST frame (not since start),
-// so moving the tempo slider mid-play speeds up smoothly instead of jumping.
-function tick(now) {
-  if (!state.playing) return;
+// Books every syllable that starts within the next SCHEDULE_AHEAD_S seconds.
+// Tempo is read at booking time, so slider changes apply within ~0.1 s.
+function scheduler() {
+  if (!state.playing || state.finished) return;
+  const ctx = getContext();
 
-  state.position += (now - state.lastFrame) / unitMs();
-  state.lastFrame = now;
-
-  if (state.position >= state.totalUnits) {
-    if (els.loop.checked) {
-      state.position -= state.totalUnits;
-    } else {
-      stop();
-      return;
-    }
+  // If the tab was in the background, timers slow down; skip ahead instead of
+  // firing a burst of late strokes all at once.
+  if (state.nextTime < ctx.currentTime - 0.2) {
+    state.nextTime = ctx.currentTime + 0.05;
   }
 
-  state.schedule.forEach((s) => {
-    const isActive = state.position >= s.start && state.position < s.end;
-    s.el.classList.toggle('active', isActive);
-  });
+  while (state.nextTime < ctx.currentTime + SCHEDULE_AHEAD_S) {
+    const item = state.schedule[state.nextIndex];
+    const duration = item.weight * unitSec();
 
-  state.rafId = requestAnimationFrame(tick);
+    if (els.sound.checked) playSyllable(item.weight, state.nextTime, item.accent);
+    state.visualQueue.push({ el: item.el, start: state.nextTime, end: state.nextTime + duration });
+
+    state.nextTime += duration;
+    state.nextIndex += 1;
+
+    if (state.nextIndex >= state.schedule.length) {
+      if (els.loop.checked) {
+        state.nextIndex = 0;
+      } else {
+        state.finished = true;
+        state.endTime = state.nextTime;
+        break;
+      }
+    }
+  }
+}
+
+// Runs every frame: lights up whichever booked syllable the audio clock is in.
+function draw() {
+  if (!state.playing) return;
+  const now = getContext().currentTime;
+
+  // Remove syllables that have finished.
+  while (state.visualQueue.length && state.visualQueue[0].end <= now) {
+    state.visualQueue.shift().el.classList.remove('active');
+  }
+
+  // Light the current one (if it has started yet).
+  const current = state.visualQueue[0];
+  if (current && current.start <= now) current.el.classList.add('active');
+
+  if (state.finished && now >= state.endTime) {
+    stop();
+    return;
+  }
+
+  state.rafId = requestAnimationFrame(draw);
 }
 
 // ---------- Events ----------

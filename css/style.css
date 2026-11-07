@@ -193,7 +193,7 @@ body {
   cursor: pointer;
 }
 .play-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-.tempo, .loop {
+.tempo, .toggle {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -202,7 +202,7 @@ body {
 }
 .tempo input { accent-color: var(--turquoise); }
 .tempo output { min-width: 2.5ch; color: var(--ink); }
-.loop input { accent-color: var(--turquoise); }
+.toggle input { accent-color: var(--turquoise); }
 
 /* ---------- Example verse ---------- */
 .example {
