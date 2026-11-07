@@ -28,4 +28,4 @@ Or use the VS Code **Live Server** extension.
 - [x] Rhythm to sound (Web Audio)
 - [x] Scansion engine: verse in, meter out
 - [x] Generative visuals driven by the rhythm
-- [ ] Polish and write-up
+- [x] Polish and write-up
