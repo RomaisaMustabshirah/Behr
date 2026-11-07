@@ -14,11 +14,12 @@
 //   [1, 2] flexible (poetic licence, e.g. word-final "ki", "pe", "se")
 //   [1, 0] an extra short that may also vanish (0 = not counted)
 
-import { METERS } from './meters.js';
+import { METERS, meterForms } from './meters.js';
 
 const LONG_VOWELS = ['aa', 'ii', 'ee', 'uu', 'oo', 'ai', 'au', 'ei']; // two letters
 const SINGLE_LONG = ['e', 'o'];                                      // one letter, long
 const SHORT_VOWELS = ['a', 'i', 'u'];
+const TRIGRAPHS = ['chh'];                                           // aspirated ch: "kuchh"
 const DIGRAPHS = ['kh', 'gh', 'ch', 'sh', 'zh', 'th', 'dh', 'ph', 'bh', 'jh'];
 const NASAL = '~'; // internal marker for noon ghunna (ñ), which carries no weight
 
@@ -44,11 +45,13 @@ function toPhonemes(word) {
   while (i < word.length) {
     const one = word[i];
     const two = word.slice(i, i + 2);
+    const three = word.slice(i, i + 3);
 
     if (one === NASAL) { i += 1; continue; }            // nasal adds no sound unit
     if (LONG_VOWELS.includes(two)) { out.push({ type: 'V', text: two, long: true }); i += 2; continue; }
     if (SINGLE_LONG.includes(one)) { out.push({ type: 'V', text: one, long: true }); i += 1; continue; }
     if (SHORT_VOWELS.includes(one)) { out.push({ type: 'V', text: one, long: false }); i += 1; continue; }
+    if (TRIGRAPHS.includes(three)) { out.push({ type: 'C', text: three }); i += 3; continue; }
     if (DIGRAPHS.includes(two)) { out.push({ type: 'C', text: two }); i += 2; continue; }
 
     out.push({ type: 'C', text: one });
@@ -195,11 +198,19 @@ export function scanVerse(text) {
   const tokens = scanLine(text);
   if (tokens.length === 0) return { tokens, results: [] };
 
+  // Try every accepted form (main form + zihāf variants) of every meter,
+  // and keep each meter's best-fitting form.
   const results = METERS
     .map((meter) => {
-      const pattern = meter.arkan.flatMap((rukn) => rukn.pattern);
-      const match = matchMeter(tokens, pattern);
-      return match ? { meter, pattern, ...match } : null;
+      let best = null;
+      meterForms(meter).forEach((arkan, formIndex) => {
+        const pattern = arkan.flatMap((rukn) => rukn.pattern);
+        const match = matchMeter(tokens, pattern);
+        if (match && (!best || match.mismatches < best.mismatches)) {
+          best = { meter, arkan, pattern, isVariant: formIndex > 0, ...match };
+        }
+      });
+      return best;
     })
     .filter(Boolean)
     .sort((a, b) => a.mismatches - b.mismatches);

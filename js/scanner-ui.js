@@ -3,8 +3,8 @@
 // shows each syllable with its weight, and lists the best-matching meters.
 
 import { scanVerse } from './scansion.js';
+import { METERS } from './meters.js';
 
-const SAMPLE = 'hazāroñ ḳhvāhisheñ aisī ki har ḳhvāhish pe dam nikle';
 const MARK = { 1: '◡', 2: '—', 0: '·' };
 const MAX_RESULTS = 4;
 
@@ -12,7 +12,7 @@ export function initScanner({ onMeterFound }) {
   const els = {
     input: document.getElementById('scan-input'),
     scanBtn: document.getElementById('scan-btn'),
-    sampleBtn: document.getElementById('scan-sample'),
+    samples: document.getElementById('scan-samples'),
     output: document.getElementById('scan-output'),
     syllables: document.getElementById('scan-syllables'),
     results: document.getElementById('scan-results'),
@@ -35,8 +35,8 @@ export function initScanner({ onMeterFound }) {
     renderSyllables(tokens, best);
     renderResults(results);
 
-    // A perfect match jumps straight to that meter so it can be played.
-    if (best && best.mismatches === 0) onMeterFound(best.meter.id);
+    // A perfect match jumps straight to that meter (in the exact form found).
+    if (best && best.mismatches === 0) onMeterFound(best.meter.id, best.arkan);
   }
 
   // Each syllable chip shows its text and the weight the best meter gave it.
@@ -94,26 +94,43 @@ export function initScanner({ onMeterFound }) {
       const badge = r.mismatches === 0
         ? '<span class="badge perfect">perfect match</span>'
         : `<span class="badge">${r.mismatches} mismatch${r.mismatches > 1 ? 'es' : ''}</span>`;
+      const variant = r.isVariant ? '<span class="badge variant">zihāf form</span>' : '';
       li.innerHTML = `
         <span class="scan-result-name">${r.meter.name}</span>
         <span class="urdu" lang="ur">${r.meter.urdu}</span>
         ${badge}
+        ${variant}
         <button type="button" class="ghost-btn">Show</button>
       `;
       li.querySelector('button').addEventListener('click', () => {
-        onMeterFound(r.meter.id);
+        onMeterFound(r.meter.id, r.arkan);
         document.getElementById('stage').scrollIntoView({ behavior: 'smooth' });
       });
       els.results.appendChild(li);
     });
   }
 
+  // One "try it" button per meter that has an example verse.
+  function renderSamples() {
+    METERS.filter((m) => m.example).forEach((meter) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ghost-btn sample-btn';
+      const firstWords = meter.example.roman.split(' ').slice(0, 3).join(' ');
+      btn.textContent = `${meter.example.poet.split(' ').pop()}: ${firstWords}…`;
+      btn.title = meter.example.roman;
+      btn.addEventListener('click', () => {
+        els.input.value = meter.example.roman;
+        run();
+      });
+      els.samples.appendChild(btn);
+    });
+  }
+
   els.scanBtn.addEventListener('click', run);
-  els.sampleBtn.addEventListener('click', () => {
-    els.input.value = SAMPLE;
-    run();
-  });
   els.input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) run();
   });
+
+  renderSamples();
 }

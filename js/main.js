@@ -70,11 +70,13 @@ function renderMeterList() {
   });
 }
 
-function selectMeter(id) {
+// arkan (optional): a specific variant form found by the scanner.
+function selectMeter(id, arkan = null) {
   stop();
   const meter = METERS.find((m) => m.id === id);
   if (!meter) return;
   state.meter = meter;
+  const isVariant = arkan !== null && arkan.some((rukn, i) => rukn !== meter.arkan[i]);
 
   els.list.querySelectorAll('.meter-btn').forEach((btn) => {
     const active = btn.dataset.id === id;
@@ -84,13 +86,12 @@ function selectMeter(id) {
 
   els.emptyHint.hidden = true;
   els.view.hidden = false;
-  els.name.textContent = meter.name;
+  els.name.textContent = isVariant ? `${meter.name} · zihāf form` : meter.name;
   els.urdu.textContent = meter.urdu;
 
-  renderRhythm(meter);
+  renderRhythm(isVariant ? { ...meter, arkan } : meter);
   renderExample(meter);
 }
-
 // ---------- Rhythm drawing ----------
 // Each foot becomes a group; each syllable becomes a block whose width
 // is proportional to its weight (long = twice as wide as short).

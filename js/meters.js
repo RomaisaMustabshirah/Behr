@@ -7,6 +7,9 @@
 //
 // Keeping this as plain data means the scansion engine (Step 3) can
 // compare a line of poetry against these same patterns.
+//
+// variants (zihāf): some feet have accepted alternate forms. They are listed
+// as { footIndex: ['altFootName', ...] } and tried alongside the main form.
 
 // The building blocks: named feet (arkān) and their weight patterns.
 export const ARKAN = {
@@ -18,10 +21,22 @@ export const ARKAN = {
   mafailun:   { roman: 'mafā‘ilun',   urdu: 'مفاعلن',  pattern: [1, 2, 1, 2] },
   fa_ilun:    { roman: 'fa‘ilun',     urdu: 'فعِلن',   pattern: [1, 1, 2] },
   fa_ilatun:  { roman: 'fa‘ilātun',   urdu: 'فعِلاتن', pattern: [1, 1, 2, 2] },
+  falun:      { roman: 'fa‘lun',      urdu: 'فعْلن',   pattern: [2, 2] },
 };
 
 // Helper so each meter can be written as a list of foot names.
 const feet = (...names) => names.map((n) => ARKAN[n]);
+
+// Every accepted form of a meter: the main form first, then each variant combination.
+export function meterForms(meter) {
+  let forms = [[]];
+  meter.arkan.forEach((rukn, i) => {
+    const alts = (meter.variants && meter.variants[i]) || [];
+    const options = [rukn, ...alts.map((name) => ARKAN[name])];
+    forms = forms.flatMap((form) => options.map((option) => [...form, option]));
+  });
+  return forms;
+}
 
 export const METERS = [
   {
@@ -47,7 +62,23 @@ export const METERS = [
     name: 'Ramal Musamman Makhbūn Mahzūf',
     urdu: 'رمل مثمن مخبون محذوف',
     arkan: feet('failatun', 'fa_ilatun', 'fa_ilatun', 'fa_ilun'),
-    example: null,
+    variants: { 0: ['fa_ilatun'], 3: ['falun'] },
+    example: {
+      urdu: 'لب پہ آتی ہے دعا بن کے تمنا میری',
+      roman: 'lab pe ātī hai duā ban ke tamannā merī',
+      poet: 'Allama Iqbal',
+    },
+  },
+  {
+    id: 'ramal-musaddas-mahzuf',
+    name: 'Ramal Musaddas Mahzūf',
+    urdu: 'رمل مسدس محذوف',
+    arkan: feet('failatun', 'failatun', 'failun'),
+    example: {
+      urdu: 'عشق نے غالبؔ نکما کر دیا',
+      roman: 'ishq ne ġhālib nikammā kar diyā',
+      poet: 'Mirza Ghalib',
+    },
   },
   {
     id: 'mutaqarib-musamman-salim',
@@ -75,13 +106,23 @@ export const METERS = [
     name: 'Khafīf Musaddas Makhbūn Mahzūf',
     urdu: 'خفیف مسدس مخبون محذوف',
     arkan: feet('failatun', 'mafailun', 'fa_ilun'),
-    example: null,
+    variants: { 0: ['fa_ilatun'], 2: ['falun'] },
+    example: {
+      urdu: 'دلِ ناداں تجھے ہوا کیا ہے',
+      roman: 'dil-e-nādāñ tujhe huā kyā hai',
+      poet: 'Mirza Ghalib',
+    },
   },
   {
     id: 'mujtass-musamman-makhbun-mahzuf',
     name: 'Mujtass Musamman Makhbūn Mahzūf',
     urdu: 'مجتث مثمن مخبون محذوف',
     arkan: feet('mafailun', 'fa_ilatun', 'mafailun', 'fa_ilun'),
-    example: null,
+    variants: { 3: ['falun'] },
+    example: {
+      urdu: 'ہر ایک بات پہ کہتے ہو تم کہ تو کیا ہے',
+      roman: 'har ek bāt pe kahte ho tum ki tū kyā hai',
+      poet: 'Mirza Ghalib',
+    },
   },
 ];
