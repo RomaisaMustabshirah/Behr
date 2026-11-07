@@ -2,8 +2,17 @@
 
 **The hidden rhythm inside Urdu poetry.**
 
-Every Urdu ghazal is written in a *behr*, a meter made of feet (*arkān*) like *mafā‘īlun* and *fā‘ilātun*. Each foot is a pattern of short and long syllables. Behr makes that pattern visible and, in later stages, audible. It also scans real verses to work out which meter they're in.
+**Live:** https://romaisamustabshirah.github.io/Behr/
 
+Every Urdu ghazal is written in a *behr*: a meter made of long and short syllables that poets feel but readers rarely see. Behr makes this hidden structure perceptible in three ways:
+
+- **Scan:** type a misra in Roman Urdu and a scansion engine finds its meter, handling poetic licence, *wasl* and *zihāf* variants
+- **Hear:** a synthesized tabla plays the rhythm, a deep *dum* for long syllables and a bright *tak* for short ones
+- **See:** each meter draws its own star-polygon signature in the 8-pointed *khatam* of Islamic geometry
+
+All three are generated from the same underlying pattern, so sound, light and syllables move together.
+
+Built with plain JavaScript, the Web Audio API and Canvas, with no libraries.
 ## Notation
 
 | Mark | Weight | Name | Example syllables |
