@@ -4,6 +4,7 @@
 
 import { METERS } from './meters.js';
 import { getContext, resumeAudio, playSyllable } from './audio.js';
+import { initScanner } from './scanner-ui.js';
 
 // ---------- DOM references ----------
 const els = {
@@ -235,3 +236,4 @@ els.tempo.addEventListener('input', () => {
 // ---------- Start ----------
 renderMeterList();
 selectMeter(METERS[0].id);
+initScanner({ onMeterFound: selectMeter });

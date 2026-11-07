@@ -67,6 +67,25 @@
       </div>
     </section>
   </main>
+  
+  <section class="scanner" aria-labelledby="scanner-title">
+    <h2 id="scanner-title">Scan a verse <span class="urdu" lang="ur" dir="rtl">تقطیع</span></h2>
+    <p class="scanner-help">
+      Type a misra in Roman Urdu. Write long vowels as <code>aa</code>, <code>ii</code>, <code>uu</code>, <code>e</code>, <code>o</code>
+      and nasal noon as <code>ñ</code> or a capital <code>N</code> at the end of a word (<code>meiN</code>, <code>haiN</code>).
+    </p>
+    <textarea id="scan-input" rows="2" spellcheck="false"
+      placeholder="hazaaroN khwaahisheN aisii ki har khwaahish pe dam nikle"></textarea>
+    <div class="scanner-actions">
+      <button type="button" id="scan-btn" class="play-btn">Scan</button>
+      <button type="button" id="scan-sample" class="ghost-btn">Try Ghalib</button>
+      <span class="scanner-hint">Ctrl + Enter also scans</span>
+    </div>
+    <div id="scan-output" hidden>
+      <div class="scan-syllables" id="scan-syllables"></div>
+      <ol class="scan-results" id="scan-results"></ol>
+    </div>
+  </section>
 
   <script type="module" src="js/main.js"></script>
 </body>
