@@ -29,6 +29,13 @@ const els = {
 
 const viz = createVisualizer(document.getElementById('viz'));
 
+// Other modules (the scanner) can listen to each beat as it sounds.
+// Each listener gets (beatIndex, meterId, arkanShown); beatIndex is null on stop.
+const beatListeners = [];
+const emitBeat = (index) => {
+  beatListeners.forEach((fn) => fn(index, state.meter && state.meter.id, state.arkanShown));
+};
+
 // ---------- Scheduler settings ----------
 // Every 25 ms we look 0.1 s into the future and book any syllables that fall
 // inside that window on the audio clock (the "lookahead scheduler" pattern).
@@ -38,6 +45,7 @@ const SCHEDULE_AHEAD_S = 0.1;
 // ---------- State ----------
 const state = {
   meter: null,
+  arkanShown: null, // the exact feet on screen (main form or a zihāf variant)
   schedule: [],     // [{ el, weight, accent, startUnit }] one entry per syllable
   totalUnits: 0,    // length of the whole misra in units
   playing: false,
@@ -71,7 +79,8 @@ function renderMeterList() {
 }
 
 // arkan (optional): a specific variant form found by the scanner.
-function selectMeter(id, arkan = null) {
+// verse (optional): the scanned line, shown instead of the built-in example.
+function selectMeter(id, arkan = null, verse = null) {
   stop();
   const meter = METERS.find((m) => m.id === id);
   if (!meter) return;
@@ -89,9 +98,11 @@ function selectMeter(id, arkan = null) {
   els.name.textContent = isVariant ? `${meter.name} · zihāf form` : meter.name;
   els.urdu.textContent = meter.urdu;
 
+  state.arkanShown = isVariant ? arkan : meter.arkan;
   renderRhythm(isVariant ? { ...meter, arkan } : meter);
-  renderExample(meter);
+  renderExample(meter, verse);
 }
+
 // ---------- Rhythm drawing ----------
 // Each foot becomes a group; each syllable becomes a block whose width
 // is proportional to its weight (long = twice as wide as short).
@@ -141,7 +152,14 @@ function renderRhythm(meter) {
   })));
 }
 
-function renderExample(meter) {
+function renderExample(meter, verse = null) {
+  if (verse) {
+    els.example.hidden = false;
+    els.exampleUrdu.textContent = '';
+    els.exampleRoman.textContent = verse;
+    els.examplePoet.textContent = '— your scanned verse';
+    return;
+  }
   if (!meter.example) {
     els.example.hidden = true;
     return;
@@ -182,6 +200,7 @@ function stop() {
   state.visualQueue = [];
   state.schedule.forEach((s) => s.el.classList.remove('active'));
   viz.setPlayhead(null);
+  emitBeat(null);
   els.play.textContent = '▶ Play';
   els.play.setAttribute('aria-pressed', 'false');
 }
@@ -243,6 +262,7 @@ function draw() {
     if (!current.fired) {
       current.fired = true;
       viz.pulse(current.index);
+      emitBeat(current.index);
     }
 
     // Smooth playhead: how far through this syllable are we, in units?
@@ -269,4 +289,10 @@ els.tempo.addEventListener('input', () => {
 // ---------- Start ----------
 renderMeterList();
 selectMeter(METERS[0].id);
-initScanner({ onMeterFound: selectMeter });
+initScanner({
+  onMeterFound: selectMeter,
+  onPlay: play,
+  onStop: stop,
+  isPlaying: () => state.playing,
+  onBeat: (fn) => beatListeners.push(fn),
+});

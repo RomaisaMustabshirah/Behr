@@ -370,3 +370,14 @@ body {
   font-style: italic;
 }
 .badge.variant { background: rgba(47, 75, 184, 0.35); color: var(--ink); }
+
+/* ---------- Verse playback: the sounding syllable glows ---------- */
+.syl { transition: background 0.08s, transform 0.08s, box-shadow 0.08s; }
+.syl.playing {
+  background: var(--turquoise);
+  border-color: var(--turquoise);
+  transform: translateY(-3px);
+  box-shadow: 0 0 14px rgba(63, 193, 201, 0.6);
+}
+.syl.playing .syl-text,
+.syl.playing .syl-mark { color: var(--bg); }

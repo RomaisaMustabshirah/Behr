@@ -8,19 +8,28 @@ import { METERS } from './meters.js';
 const MARK = { 1: '◡', 2: '—', 0: '·' };
 const MAX_RESULTS = 4;
 
-export function initScanner({ onMeterFound }) {
+export function initScanner({ onMeterFound, onPlay, onStop, isPlaying, onBeat }) {
   const els = {
     input: document.getElementById('scan-input'),
     scanBtn: document.getElementById('scan-btn'),
+    playBtn: document.getElementById('scan-play'),
     samples: document.getElementById('scan-samples'),
     output: document.getElementById('scan-output'),
     syllables: document.getElementById('scan-syllables'),
     results: document.getElementById('scan-results'),
   };
 
+  // The last perfect scan, so its chips can glow while it plays.
+  // slotToChip[i] = the chip that sounds on beat i of the meter.
+  let current = null; // { meterId, arkan, slotToChip: [] }
+
   function run() {
     const text = els.input.value.trim();
     if (!text) return;
+
+    if (isPlaying()) onStop();
+    current = null;
+    els.playBtn.hidden = true;
 
     const { tokens, results } = scanVerse(text);
     els.output.hidden = false;
@@ -35,8 +44,12 @@ export function initScanner({ onMeterFound }) {
     renderSyllables(tokens, best);
     renderResults(results);
 
-    // A perfect match jumps straight to that meter (in the exact form found).
-    if (best && best.mismatches === 0) onMeterFound(best.meter.id, best.arkan);
+    // A perfect match jumps straight to that meter (in the exact form found)
+    // and can be played right here.
+    if (best && best.mismatches === 0) {
+      onMeterFound(best.meter.id, best.arkan, text);
+      els.playBtn.hidden = false;
+    }
   }
 
   // Each syllable chip shows its text and the weight the best meter gave it.
@@ -53,6 +66,7 @@ export function initScanner({ onMeterFound }) {
 
     els.syllables.innerHTML = '';
     let lastWord = -1;
+    const slotToChip = [];
 
     tokens.forEach((token, i) => {
       if (lastWord !== -1 && token.wordIndex !== lastWord) {
@@ -78,8 +92,48 @@ export function initScanner({ onMeterFound }) {
         ? `The meter expects ${weight === 2 ? 'long' : 'short'} here`
         : token.options.length > 1 ? 'Flexible syllable (poetic licence)' : '';
       els.syllables.appendChild(chip);
+
+      const step = best && best.steps.find((st) => st.tokenIndex === i);
+      if (step && step.slot !== null) slotToChip[step.slot] = chip;
     });
+
+    if (best && best.mismatches === 0) {
+      current = { meterId: best.meter.id, arkan: best.arkan, slotToChip, text: els.input.value.trim() };
+    }
   }
+
+  // Same meter AND the same feet on screen? (Users may pick another meter.)
+  function isShowing(meterId, arkan) {
+    return current
+      && current.meterId === meterId
+      && arkan
+      && arkan.length === current.arkan.length
+      && arkan.every((rukn, i) => rukn === current.arkan[i]);
+  }
+
+  // Light the chip that is sounding right now.
+  onBeat((index, meterId, arkan) => {
+    els.syllables.querySelectorAll('.syl.playing').forEach((c) => c.classList.remove('playing'));
+    if (index === null) {
+      els.playBtn.textContent = '▶ Play verse';
+      return;
+    }
+    if (!isShowing(meterId, arkan)) return;
+    els.playBtn.textContent = '■ Stop';
+    const chip = current.slotToChip[index];
+    if (chip) chip.classList.add('playing');
+  });
+
+  els.playBtn.addEventListener('click', () => {
+    if (isPlaying()) {
+      onStop();
+      return;
+    }
+    if (!current) return;
+    onMeterFound(current.meterId, current.arkan, current.text); // put this verse's form on screen
+    onPlay();
+    els.playBtn.textContent = '■ Stop';
+  });
 
   function renderResults(results) {
     els.results.innerHTML = '';
@@ -103,7 +157,7 @@ export function initScanner({ onMeterFound }) {
         <button type="button" class="ghost-btn">Show</button>
       `;
       li.querySelector('button').addEventListener('click', () => {
-        onMeterFound(r.meter.id, r.arkan);
+        onMeterFound(r.meter.id, r.arkan, r.mismatches === 0 ? els.input.value.trim() : null);
         document.getElementById('stage').scrollIntoView({ behavior: 'smooth' });
       });
       els.results.appendChild(li);

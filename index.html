@@ -28,7 +28,8 @@
           <h2 id="meter-name"></h2>
           <p id="meter-urdu" class="urdu meter-urdu" lang="ur" dir="rtl"></p>
         </div>
-                <!-- Generative geometry driven by the rhythm (decorative) -->
+
+        <!-- Generative geometry driven by the rhythm (decorative) -->
         <canvas class="viz" id="viz" aria-hidden="true"></canvas>
 
         <!-- dir="rtl": Urdu reads right to left, so the rhythm does too -->
@@ -43,7 +44,7 @@
             <output id="tempo-value">160</output>
           </label>
 
-                    <label class="toggle">
+          <label class="toggle">
             <input type="checkbox" id="loop" checked>
             Loop
           </label>
@@ -69,7 +70,7 @@
       </div>
     </section>
   </main>
-  
+
   <section class="scanner" aria-labelledby="scanner-title">
     <h2 id="scanner-title">Scan a verse <span class="urdu" lang="ur" dir="rtl">تقطیع</span></h2>
     <p class="scanner-help">
@@ -80,7 +81,8 @@
       placeholder="hazaaroN khwaahisheN aisii ki har khwaahish pe dam nikle"></textarea>
     <div class="scanner-actions">
       <button type="button" id="scan-btn" class="play-btn">Scan</button>
-            <span class="scanner-hint">Ctrl + Enter also scans</span>
+      <button type="button" id="scan-play" class="ghost-btn" hidden>▶ Play verse</button>
+      <span class="scanner-hint">Ctrl + Enter also scans</span>
     </div>
     <div class="scan-samples" id="scan-samples" aria-label="Sample verses"></div>
     <div id="scan-output" hidden>
